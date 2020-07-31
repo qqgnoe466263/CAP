@@ -8,11 +8,9 @@ test_case = {
     0: "pt0.cmd",        
     1: "pt1.cmd",        
     2: "pt2.cmd",        
-    3: "pt3.cmd",        
-    4: "pt4.cmd",        
-    5: "pt5.cmd",        
-    6: "pt6.cmd",        
-    7: "pt7.cmd",        
+    3: "pt5.cmd",        
+    4: "pt6.cmd",        
+    5: "pt7.cmd",        
 }
 
 RED = '\033[91m'
