@@ -24,7 +24,7 @@ $(GIT_HOOKS):
 	@scripts/install-git-hooks
 	@echo
 
-OBJS := http_server.o 
+OBJS := http_parser.o http_server.o main.o
 deps := $(OBJS:%.o=.%.o.d)
 
 qtest: $(OBJS)
