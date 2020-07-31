@@ -15,6 +15,23 @@ test_case = {
     7: "pt7.cmd",        
 }
 
+RED = '\033[91m'
+GREEN = '\033[92m'
+WHITE = '\033[0m'
+
+def printInColor(res, t):
+    print(f"[*] result : ", end='')
+    if t == "Normal Test":
+        if res > -1:
+            print(f"{GREEN} PASS{WHITE}")
+        else:
+            print(f"{RED} FAIL{WHITE}")
+    elif t == "Security Test":
+        if res > -1:
+            print(f"{RED} ILLEGAL ACCESS{WHITE}")
+        else:
+            print(f"{GREEN} PASS{WHITE}")
+
 for i in range(len(test_case)):
     f = open("traces/" + test_case[i], "r")
     testing_type = f.readline()
@@ -26,7 +43,8 @@ for i in range(len(test_case)):
     result = proc.stdout.readline()
     print('[+] Test type : {}'.format(testing_type[:-1]))
     print('[+] Test      : {}'.format(testing_cmd[:-1]))
-    if str(result).find(content) > -1:
-        print('[*] result    : Read Access\n')
-    else:
-        print('[*] result    : Read Fail\n')
+    printInColor(str(result).find(content), format(testing_type[:-1]))
+    # if str(result).find(content) > -1:
+        # # print('[*] result    : Read Access\n')
+    # else:
+    #     print('[*] result    : Read Fail\n')
