@@ -4,18 +4,16 @@ import os
 import subprocess
 from subprocess import PIPE, Popen
 
-
 test_case = {
-    0: "test_pt8.cmd",        
-    1: "test_pt.cmd",        
-    2: "test_pt5.cmd",        
-    3: "test_pt2.cmd",        
-    4: "test_pt1.cmd",        
-    5: "test_pt3.cmd",        
-    6: "test_pt4.cmd",        
-    7: "test_pt6.cmd",        
+    0: "pt0.cmd",        
+    1: "pt1.cmd",        
+    2: "pt2.cmd",        
+    3: "pt3.cmd",        
+    4: "pt4.cmd",        
+    5: "pt5.cmd",        
+    6: "pt6.cmd",        
+    7: "pt7.cmd",        
 }
-
 
 for i in range(len(test_case)):
     f = open("traces/" + test_case[i], "r")
