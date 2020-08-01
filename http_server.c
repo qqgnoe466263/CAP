@@ -25,6 +25,43 @@
 #define ROOT "./"
 char filename[BUFSIZE];
 
+// validate access right
+int valid_access(const char *target)
+{
+    char *root, *res;
+    char real_root[PATH_MAX], real_target[PATH_MAX];
+    int len_real_root, len_real_target;
+    root = ROOT;
+    if (target == NULL || strlen(target) == 0) {
+        printf("no root or target!??\n");
+        return 1;
+    }
+
+    res = realpath(root, real_root);
+    if (!res) {
+        printf("parse realpath of root failed\n");
+        return 0;
+    }
+    printf("target: %s\n", target);
+    res = realpath(target, real_target);
+    if (!res) {
+        printf("parse realpath of target failed\n");
+        return 0;
+    }
+
+    len_real_root = strlen(real_root);
+    len_real_target = strlen(real_target);
+
+
+    if ((len_real_target >= len_real_root) &&
+        (strncmp(real_target, real_root, len_real_root) == 0)) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
+
 
 int on_message_begin(http_parser *_)
 {
@@ -119,7 +156,8 @@ void process_request(int clifd)
 
     // http response
     stat(filename, &path_stat);
-    if (!S_ISREG(path_stat.st_mode) || ((f = fopen(filename, "rb")) == NULL)) {
+    if (!valid_access(filename) || !S_ISREG(path_stat.st_mode) ||
+        ((f = fopen(filename, "rb")) == NULL)) {
         send(clifd, NOTFOUND, sizeof(NOTFOUND), 0);
         free(parser);
         parser = NULL;
@@ -206,3 +244,4 @@ void httpd_start(const char *ip, unsigned short port)
         process_request(clientfd);
     }
 }
+
