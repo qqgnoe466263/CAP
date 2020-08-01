@@ -2,7 +2,7 @@ CC = gcc
 CFLAGS = -O1 -g -Wall -Werror -I.
 
 GIT_HOOKS := .git/hooks/applied
-all: $(GIT_HOOKS) test
+all: $(GIT_HOOKS) http_server 
 
 # Control the build verbosity
 ifeq ("$(VERBOSE)","1")
