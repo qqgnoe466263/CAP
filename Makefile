@@ -2,7 +2,7 @@ CC = gcc
 CFLAGS = -O1 -g -Wall -Werror -I.
 
 GIT_HOOKS := .git/hooks/applied
-all: $(GIT_HOOKS) qtest
+all: $(GIT_HOOKS) test
 
 # Control the build verbosity
 ifeq ("$(VERBOSE)","1")
@@ -27,28 +27,30 @@ $(GIT_HOOKS):
 OBJS := http_parser.o http_server.o main.o
 deps := $(OBJS:%.o=.%.o.d)
 
-qtest: $(OBJS)
+http_server: $(OBJS)
 	$(VECHO) "  LD\t$@\n"
-	$(Q)$(CC) $(LDFLAGS) -o $@ $^ -lm
+	$(Q)$(CC) $(LDFLAGS) -o $@ $^ 
 
 %.o: %.c
 	$(VECHO) "  CC\t$@\n"
 	$(Q)$(CC) -o $@ $(CFLAGS) -c -MMD -MF .$@.d $<
 
-check: qtest
-	./$< -v 3 -f traces/trace-eg.cmd
+test: http_server scripts/driver.py
+	$(VECHO) " TEST\t$<\n"
+	$(Q) ./http_server > /dev/null & scripts/driver.py -c
+	$(Q) kill `pidof http_server`
 
-test: qtest scripts/driver.py
-	scripts/driver.py -c
+run: http_server
+	./http_server 
 
 valgrind_existence:
 	@which valgrind 2>&1 > /dev/null || (echo "FATAL: valgrind not found"; exit 1)
 
 valgrind: valgrind_existence
 	# Explicitly disable sanitizer(s)
-	$(MAKE) clean SANITIZER=0 qtest
-	$(eval patched_file := $(shell mktemp /tmp/qtest.XXXXXX))
-	cp qtest $(patched_file)
+	$(MAKE) clean SANITIZER=0 http_test
+	$(eval patched_file := $(shell mktemp /tmp/http_test.XXXXXX))
+	cp http_test $(patched_file)
 	chmod u+x $(patched_file)
 	sed -i "s/alarm/isnan/g" $(patched_file)
 	scripts/driver.py -p $(patched_file) --valgrind
@@ -57,7 +59,7 @@ valgrind: valgrind_existence
 	@echo "scripts/driver.py -p $(patched_file) --valgrind -t <tid>"
 
 clean:
-	rm -f $(OBJS) $(deps) *~ qtest /tmp/qtest.*
+	rm -f $(OBJS) $(deps) *~ http_test /tmp/http_test.*
 	(cd traces; rm -f *~)
 
 -include $(deps)

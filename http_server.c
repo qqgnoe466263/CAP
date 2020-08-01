@@ -32,20 +32,21 @@ int valid_access(const char *target)
     char real_root[PATH_MAX], real_target[PATH_MAX];
     int len_real_root, len_real_target;
     root = ROOT;
-    if (target == NULL) {
+    if (target == NULL || strlen(target) == 0) {
         printf("no root or target!??\n");
         return 1;
     }
 
     res = realpath(root, real_root);
     if (!res) {
-        printf("parse realpath failed\n");
-        exit(1);
+        printf("parse realpath of root failed\n");
+        return 0;
     }
+    printf("target: %s\n", target);
     res = realpath(target, real_target);
     if (!res) {
-        printf("parse realpath failed\n");
-        exit(1);
+        printf("parse realpath of target failed\n");
+        return 0;
     }
 
     len_real_root = strlen(real_root);
@@ -162,7 +163,8 @@ void process_request(int clifd)
         parser = NULL;
         shutdown(clifd, SHUT_RDWR);
         close(clifd);
-        fclose(f);
+        if (f != NULL)
+            fclose(f);
         return;
     }
     fseek(f, 0, SEEK_END);

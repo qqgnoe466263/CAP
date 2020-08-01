@@ -16,6 +16,7 @@ test_case = {
 RED = '\033[91m'
 GREEN = '\033[92m'
 WHITE = '\033[0m'
+fail = 0;
 
 def printInColorNor(fl, res):
     print(f"[*] result : ", end='')
@@ -23,14 +24,17 @@ def printInColorNor(fl, res):
         print(f"{GREEN} PASS{WHITE}")
     else:
         print(f"{RED} FAIL{WHITE}")
+        global fail
+        fail = 1
 
 def printInColorSec(fl, con, res):
     print(f"[*] result : ", end='')
     if con[0] == '200' and res > -1:
         print(f"{RED} ILLEGAL ACCESS{WHITE}")
+        global fail
+        fail = 1
     else:
         print(f"{GREEN} PASS{WHITE}")
-
 
 for i in range(len(test_case)):
     f = open("traces/" + test_case[i], "r")
@@ -51,3 +55,7 @@ for i in range(len(test_case)):
         printInColorSec(flag, content, str(result).find(content[1]))
     else:
         printInColorNor(flag, str(result).find(content))
+
+if fail == 1:
+    os.system("kill `pidof http_server`")
+    sys.exit(1)
