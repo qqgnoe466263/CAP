@@ -28,17 +28,25 @@ char filename[BUFSIZE];
 // validate access right
 int valid_access(const char *target)
 {
-    char *root;
+    char *root, *res;
     char real_root[PATH_MAX], real_target[PATH_MAX];
     int len_real_root, len_real_target;
     root = ROOT;
-    if (root == NULL || target == NULL) {
+    if (target == NULL) {
         printf("no root or target!??\n");
         return 1;
     }
 
-    realpath(root, real_root);
-    realpath(target, real_target);
+    res = realpath(root, real_root);
+    if (!res) {
+        printf("parse realpath failed\n");
+        exit(1);
+    }
+    res = realpath(target, real_target);
+    if (!res) {
+        printf("parse realpath failed\n");
+        exit(1);
+    }
 
     len_real_root = strlen(real_root);
     len_real_target = strlen(real_target);
@@ -138,7 +146,8 @@ void process_request(int clifd)
     parser_set.on_headers_complete = on_headers_complete;
     parser_set.on_message_complete = on_message_complete;
 
-    n = recv(clifd, buf, BUFSIZE, 0);
+
+    recv(clifd, buf, BUFSIZE, 0);
     parser = (http_parser *) malloc(sizeof(http_parser));
 
     http_parser_init(parser, HTTP_REQUEST);
@@ -146,13 +155,14 @@ void process_request(int clifd)
 
     // http response
     stat(filename, &path_stat);
-    if (!valid_access(filename) | !S_ISREG(path_stat.st_mode) |
+    if (!valid_access(filename) || !S_ISREG(path_stat.st_mode) ||
         ((f = fopen(filename, "rb")) == NULL)) {
         send(clifd, NOTFOUND, sizeof(NOTFOUND), 0);
         free(parser);
         parser = NULL;
         shutdown(clifd, SHUT_RDWR);
         close(clifd);
+        fclose(f);
         return;
     }
     fseek(f, 0, SEEK_END);
@@ -160,7 +170,15 @@ void process_request(int clifd)
     fseek(f, 0, SEEK_SET); /* same as rewind(f); */
 
     filebuf = malloc(fsize + 1);
-    fread(filebuf, 1, fsize, f);
+    n = fread(filebuf, 1, fsize, f);
+    if (n == 0) {
+        printf("fread failed\n");
+        free(parser);
+        free(filebuf);
+        fclose(f);
+        close(clifd);
+        return;
+    }
     filebuf[fsize] = '\0';
     fclose(f);
 
@@ -185,7 +203,7 @@ void process_request(int clifd)
 void httpd_start(const char *ip, unsigned short port)
 {
     struct sockaddr_in addr;
-    int clientfd, optval;
+    int optval;
     int addrlen = sizeof(addr);
     int serverfd;
 
@@ -214,6 +232,7 @@ void httpd_start(const char *ip, unsigned short port)
     }
 
     while (1) {
+        int clientfd;
         if ((clientfd = accept(serverfd, (struct sockaddr *) &addr,
                                (socklen_t *) &addrlen)) < 0) {
             perror("accept():");
@@ -223,3 +242,4 @@ void httpd_start(const char *ip, unsigned short port)
         process_request(clientfd);
     }
 }
+
